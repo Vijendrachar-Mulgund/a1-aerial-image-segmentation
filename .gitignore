@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+
+# uv
+# NOTE: uv.lock is committed deliberately - it is what makes installs
+# reproducible. Do not add it here.
+
+# Model artifacts
+*.pt
+runs/
+output/
+
+# Datasets - never commit imagery. Use DVC or keep it out of the repo.
+datasets/
+data/
+*.zip
+
+# Secrets
+.env
