@@ -9,7 +9,6 @@ __pycache__/
 # reproducible. Do not add it here.
 
 # Model artifacts
-*.pt
 runs/
 output/
 

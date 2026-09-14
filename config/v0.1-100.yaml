@@ -1,0 +1,7 @@
+# Inherits configs/base.yaml. Only what differs belongs here.
+# Output: {output.root}/v0.1-100
+
+run_name: v0.1-100
+
+train:
+  epochs: 100

@@ -1,0 +1,48 @@
+# Settings shared by every run. Run configs in this folder inherit from here
+# and override what differs. Never edit a run config to change something that
+# should apply everywhere - change it here instead.
+
+model: yolo26s-sem.pt
+seed: 0
+
+# Class order is Roboflow's and is encoded in the label files. The loader
+# appends `background` as index 3 for the polygon path; do not add it to the
+# dataset data.yaml.
+classes: [divider, road, sidewalk]
+background_index: 3
+
+dataset:
+  source: roboflow            # roboflow | local
+  format: yolov8
+  # For source: roboflow
+  workspace: vm-s-workspace
+  project: a1-ariel-image-segmentation
+  version: 1
+  # For source: local - path to a folder containing data.yaml
+  path: null
+  # Where downloads land inside Colab
+  download_dir: /content/datasets
+
+train:
+  imgsz: 1280
+  batch: 4
+  nbs: 32                     # gradient accumulation target
+  device: 0
+  deterministic: true
+  optimizer: AdamW
+  cos_lr: true
+  patience: 0                 # 0 disables early stopping
+  warmup_epochs: 10
+  mosaic: 0.0                 # harmful for large contiguous regions
+  plots: true
+  save_period: 25
+
+val:
+  imgsz: 1280                 # must match train.imgsz
+  batch: 2
+  device: 0
+
+output:
+  # Ultralytics writes to {root}/{run_name}. Pointing root at Drive means a
+  # dropped Colab session costs nothing.
+  root: /content/drive/MyDrive/aerial

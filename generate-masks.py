@@ -16,7 +16,7 @@ for image in images.iterdir():
             "--path",
             f"{source_path}/{image.name}",
             "--weights",
-            "models/a1-v0.1.pt",
+            "models/a1-v0.2-500-s.pt",
         ]
     )  # noqa: E501
     print(f"Finished processing. Output: {result}")
