@@ -26,11 +26,12 @@ import pandas as pd
 DRIVE = "/content/drive/MyDrive/aerial"
 
 MODELS = {
-    "v0.1-100s  (90 img, s, 100ep)": f"{DRIVE}/v0.1-100-s/weights/best.pt",
-    "v0.2-100s  (600 img, s, 100ep)": f"{DRIVE}/v0.2-100-s/weights/best.pt",
-    "v0.2-300s  (600 img, s, 300ep)": f"{DRIVE}/v0.2-300-s/weights/best.pt",
-    "v0.2-500s  (600 img, s, 500ep)": f"{DRIVE}/v0.2-500-s/weights/best.pt",
-    "v0.2-300m (600 img, m, 300ep)": f"{DRIVE}/v0.2-300-m/weights/best.pt",
+    "v0.1-100-s  (90 img, 100ep)": f"{DRIVE}/v0.1-100-s/weights/best.pt",
+    "v0.2-100-s  (600 img, 100ep)": f"{DRIVE}/v0.2-100-s/weights/best.pt",
+    "v0.2-300-s  (600 img, 300ep)": f"{DRIVE}/v0.2-300-s/weights/best.pt",
+    "v0.2-500-s  (600 img, 500ep)": f"{DRIVE}/v0.2-500-s/weights/best.pt",
+    "v0.2-300-m  (600 img, 300ep)": f"{DRIVE}/v0.2-300-m/weights/best.pt",
+    "v0.2-300-n  (600 img, 300ep)": f"{DRIVE}/v0.2-300-n/weights/best.pt",
 }
 
 DATA_YAML = "/content/A1-Ariel-Image-Segmentation-3/data.yaml"
