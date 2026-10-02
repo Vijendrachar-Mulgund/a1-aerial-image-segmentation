@@ -13,11 +13,11 @@ result = subprocess.run(
         "--path",
         f"{source_path}",
         "--weights",
-        "models/yolo26s-sem.pt",
+        "models/a1-v0.3-300-s.pt",
         "--class-map",
-        "0=road,1=sidewalk",
+        "0=divider,1=road,2=sidewalk,3=vehicle",
         "--output",
-        "./output/baseline-cityscapes",
+        "./output/a1-v0.3-300s",
     ]
 )  # noqa: E501
 

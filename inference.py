@@ -28,13 +28,14 @@ import numpy as np
 
 # Class order comes from data.yaml and is authoritative. Background is the
 # channel Ultralytics appends for the polygon path; it is never drawn.
-CLASS_NAMES = {0: "divider", 1: "road", 2: "sidewalk", 3: "background"}
+CLASS_NAMES = {0: "divider", 1: "road", 2: "sidewalk", 3: "vehicle", 4: "background"}
 
 # BGR. Chosen to sit clear of road grey and vegetation green.
 CLASS_COLOURS = {
     0: (0, 140, 255),  # divider  — orange
     1: (255, 80, 0),  # road     — blue
     2: (200, 0, 200),  # sidewalk — magenta
+    3: (60, 200, 60),  # vehicle  — green
 }
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp"}
@@ -60,7 +61,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--imgsz", type=int, default=1280, help="must match training")
     parser.add_argument("--device", default=None, help="cuda device, or 'cpu'")
     parser.add_argument("--no-overlay", action="store_true", help="skip the overlay image")
+    parser.add_argument(
+        "--class-map",
+        default=None,
+        help='render a different class set, e.g. "0=road,1=sidewalk" for a '
+        "Cityscapes-pretrained baseline. Indices are the MODEL's own class "
+        "indices; names are what appears in the legend. Omit to use the "
+        "fine-tuned defaults.",
+    )
+    parser.add_argument(
+        "--list-classes",
+        action="store_true",
+        help="print the model's class names and exit",
+    )
     return parser.parse_args()
+
+
+def apply_class_map(spec: str) -> None:
+    """Replace the module-level class table.
+
+    A model's class indices are its own. Comparing a Cityscapes-pretrained
+    baseline against a fine-tuned model means rendering different indices
+    under the same names, so the tables have to be swappable rather than
+    hardcoded.
+    """
+    global CLASS_NAMES, CLASS_COLOURS
+    palette = [
+        (0, 140, 255),
+        (255, 80, 0),
+        (200, 0, 200),
+        (60, 200, 60),
+        (0, 215, 255),
+        (200, 120, 0),
+    ]
+    names, colours = {}, {}
+    for i, item in enumerate(spec.split(",")):
+        if "=" not in item:
+            raise SystemExit(f"--class-map entry must be index=name, got: {item}")
+        idx, name = item.split("=", 1)
+        idx = int(idx.strip())
+        names[idx] = name.strip()
+        colours[idx] = palette[i % len(palette)]
+    CLASS_NAMES = names
+    CLASS_COLOURS = colours
 
 
 def collect_inputs(path: Path) -> list[Path]:
@@ -163,7 +206,12 @@ def polygons_for_class(mask: np.ndarray, class_id: int) -> list[dict]:
 
 
 def draw_legend(image: np.ndarray, regions: list[dict]) -> np.ndarray:
-    """Legend for the classes actually present, with coverage percentages."""
+    """Legend for the classes actually present, with coverage percentages.
+
+    Colour without a key is meaningless to anyone who did not write the
+    script. The coverage figure doubles as a sanity check: a class claiming
+    30% of an aerial frame is almost certainly over-predicting.
+    """
     present = []
     for cid, name in CLASS_NAMES.items():
         if name == "background" or cid not in CLASS_COLOURS:
@@ -176,7 +224,7 @@ def draw_legend(image: np.ndarray, regions: list[dict]) -> np.ndarray:
         return image
 
     h, w = image.shape[:2]
-    s = max(1.0, min(w, h) / 900.0)  # scale with image size
+    s = max(1.0, min(w, h) / 900.0)
     pad, swatch, row = int(14 * s), int(22 * s), int(34 * s)
     font, fs, ft = cv2.FONT_HERSHEY_SIMPLEX, 0.6 * s, max(1, int(1.6 * s))
 
@@ -296,7 +344,7 @@ def main() -> int:
 
     if not args.weights.exists():
         print(f"Weights not found: {args.weights}", file=sys.stderr)
-        print("Pass --weights with path/to/weights", file=sys.stderr)
+        print("Pass --weights, or place best.pt beside this script.", file=sys.stderr)
         return 1
 
     inputs = collect_inputs(args.path)
@@ -305,6 +353,26 @@ def main() -> int:
     from ultralytics import YOLO
 
     model = YOLO(str(args.weights))
+
+    model_names = getattr(model, "names", None) or getattr(model.model, "names", {})
+    if args.list_classes:
+        for i in sorted(model_names):
+            print(f"{i}: {model_names[i]}")
+        return 0
+
+    if args.class_map:
+        apply_class_map(args.class_map)
+
+    unknown = [i for i in CLASS_NAMES if model_names and i not in model_names]
+    if unknown:
+        print(
+            f"WARNING: indices {unknown} are not in this model "
+            f"({len(model_names)} classes). Use --list-classes.",
+            file=sys.stderr,
+        )
+    for i, name in CLASS_NAMES.items():
+        if model_names and i in model_names and model_names[i] != name:
+            print(f"  note: rendering model class {i} ('{model_names[i]}') as '{name}'")
 
     failures = 0
     for image_path in inputs:
